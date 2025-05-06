@@ -3,7 +3,9 @@ import axios from 'axios';
 
 @Injectable()
 export class AppService implements OnModuleInit {
-  private readonly USER_ACCESS_TOKEN = 'EAAbRb9ZAmZCNgBO6y4XjIYx8nQAtsEZAqh44ED3tPtueqzwCdjOjyZBmrhYhuW0jpgUF0oy9Go80oK1MZAm0DGYgx4nTSOwgzFD2q3jRatNKS9nszjJ7EmKIyxI4z3DXQ95E2oo8VWyNZABkVEHJOSCqOg6gm8rdA7omggL6EWDKLbuCkhrggyhbnSOL7UtIsESjAXMzKZCAUKjx8eB20sZD';
+  private readonly USER_ACCESS_TOKEN = ['EAAPvnnOouEABO381PVjEGdOknw8Gbe60ZChAJfxZAbQ3ZBfLU6mZBVZBQeaUe2EXPCgy2hBdJmUzKs14DXCWcnnerSVnyY2bbpPyjoKByigevZBDX4WKC2VBlXMnNEEOzLXT3ZCdQoYo6XOifLzx9zanGZCQdkfceEeoJD5CVQIZCcNZA7INgJ4bau3PLI',
+  'EAAbRb9ZAmZCNgBOwHb7SbD1SBbmXy58sOpEaPPPQZAvDhaZBQDIhBJJgH0HP3KjZAKom09OuNwfRXJeBALXSOMr7h00xmbqn3blZAFO79N6bTkvc8gOqdFOF16NHu3sJH0gQZA1C8od3upQyLKOiB1x0MPZBg1EJYQtv5fdIJlD5w7ldsxrRp6IOBaB2'
+  ];
   private readonly POST_ID = '122121813488793397';
   private readonly COMMENT_TEXT = [
     "Great post! Thanks for sharing this.",
@@ -64,34 +66,40 @@ export class AppService implements OnModuleInit {
   async onModuleInit() {
     await this.getPageAccessToken();
     if (!this.pageAccessToken) {
-      console.error('❌ Không lấy được Page Access Token');
+      console.error('Không lấy được Page Access Token');
       return;
     }
 
     setInterval(() => {
       this.commentOnPost();
-    }, 2000);
+    }, 10000);
   }
 
   getHello(): string {
     return 'Hello World!';
   }
 
+  private getRandomToken(): string {
+    const index = Math.floor(Math.random() * this.USER_ACCESS_TOKEN.length);
+    return this.USER_ACCESS_TOKEN[index];
+  }
+
   private async getPageAccessToken(): Promise<void> {
     try {
+      const token = this.getRandomToken();
       const response = await axios.get(
-        `https://graph.facebook.com/v19.0/me/accounts?access_token=${this.USER_ACCESS_TOKEN}`,
+        `https://graph.facebook.com/v19.0/me/accounts?access_token=${token}`, // Use the random token here
       );
 
       if (response.data.data.length === 0) {
-        console.error('❌ Không tìm thấy Page');
+        console.error('Không tìm thấy Page');
         return;
       }
 
-      this.pageAccessToken = response.data.data[1].access_token;
-      console.log('✅ Đã lấy được Page Access Token');
+      this.pageAccessToken = response.data.data[0].access_token;
+      console.log('Đã lấy được Page Access Token');
     } catch (error) {
-      console.error('❌ Lỗi lấy Page Access Token:', error.response?.data || error.message);
+      console.error('Lỗi lấy Page Access Token:', error.response?.data || error.message);
     }
   }
 
@@ -109,9 +117,9 @@ export class AppService implements OnModuleInit {
         },
       );
 
-      console.log('✅ Đã comment:', response.data.id);
+      console.log('Đã comment:', response.data.id);
     } catch (error) {
-      console.error('❌ Lỗi khi comment:', error.response?.data || error.message);
+      console.error('Lỗi khi comment:', error.response?.data || error.message);
     }
   }
 }
