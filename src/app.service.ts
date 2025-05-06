@@ -64,11 +64,11 @@ export class AppService implements OnModuleInit {
   private pageAccessToken: string;
 
   async onModuleInit() {
-    await this.getPageAccessToken();
-    if (!this.pageAccessToken) {
-      console.error('Không lấy được Page Access Token');
-      return;
-    }
+    // await this.getPageAccessToken();
+    // if (!this.pageAccessToken) {
+    //   console.error('Không lấy được Page Access Token');
+    //   return;
+    // }
 
     setInterval(() => {
       this.commentOnPost();
@@ -84,36 +84,42 @@ export class AppService implements OnModuleInit {
     return this.USER_ACCESS_TOKEN[index];
   }
 
-  private async getPageAccessToken(): Promise<void> {
-    try {
-      const token = this.getRandomToken();
-      const response = await axios.get(
-        `https://graph.facebook.com/v19.0/me/accounts?access_token=${token}`, // Use the random token here
-      );
-
-      if (response.data.data.length === 0) {
-        console.error('Không tìm thấy Page');
-        return;
-      }
-
-      this.pageAccessToken = response.data.data[0].access_token;
-      console.log('Đã lấy được Page Access Token');
-    } catch (error) {
-      console.error('Lỗi lấy Page Access Token:', error.response?.data || error.message);
-    }
-  }
-
   getRandomComment(): string {
     return this.COMMENT_TEXT[Math.floor(Math.random() * this.COMMENT_TEXT.length)];
   }
 
+  private async getPageAccessToken(userToken: string): Promise<string | null> {
+    try {
+      const response = await axios.get(
+        `https://graph.facebook.com/v19.0/me/accounts?access_token=${userToken}`,
+      );
+
+      if (response.data.data.length === 0) {
+        console.error('Không tìm thấy Page nào');
+        return null;
+      }
+
+      console.log(`Đang dùng token: ${userToken.slice(0, 10)}...`);
+      const pageToken = response.data.data[0].access_token;
+      return pageToken;
+    } catch (error) {
+      console.error('Lỗi khi lấy Page Access Token:', error.response?.data || error.message);
+      return null;
+    }
+  }
+
+
   private async commentOnPost(): Promise<void> {
+    const userToken = this.getRandomToken();
+    const pageToken = await this.getPageAccessToken(userToken);
+    if (!pageToken) return;
+
     try {
       const response = await axios.post(
         `https://graph.facebook.com/v19.0/${this.POST_ID}/comments`,
         {
           message: this.getRandomComment(),
-          access_token: this.pageAccessToken,
+          access_token: pageToken,
         },
       );
 
